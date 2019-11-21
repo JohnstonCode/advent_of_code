@@ -7,20 +7,13 @@ $v = array_count_values($t);
 echo $v["("] - $v[")"] . PHP_EOL;
 
 $floor = 0;
-$i = 1;
 
-foreach ($t as $paren) {
-    if ($paren === '(') {
-        $floor++;
-    } elseif ($paren === ')') {
-        $floor--;
-    }
-
-    if ($floor === -1) {
+for ($i = 1; $i <= count($t); $i++) {
+    $floor += $t[$i - 1] === '(' ? 1 : -1;
+    
+    if ($floor < 0) {
         break;
     }
-
-    $i++;
 }
 
 echo $i . PHP_EOL;

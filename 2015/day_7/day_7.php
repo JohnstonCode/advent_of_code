@@ -15,7 +15,7 @@ $wires = [];
 
 while (!isset($wires['a'])) {
     foreach ($arr as $key => $line) {
-        $wires['b'] = 956;
+        // $wires['b'] = 956;
         if (preg_match_all('/^(\d+)\s->\s(\w+)/', $line, $matches)) {
             [, $signal, $wire] = flatten($matches);
             
@@ -85,19 +85,10 @@ while (!isset($wires['a'])) {
             continue;
         }
     }
-
-    // echo count($wires) . PHP_EOL;
-
-    // if (count($wires) === 338) {
-    //     break;
-    // }
 }
 
 function flatten(array $array) {
     return array_merge(...array_values($array));
 }
-
-// var_dump($wires);
-// die();
 
 echo $wires['a'] . PHP_EOL;

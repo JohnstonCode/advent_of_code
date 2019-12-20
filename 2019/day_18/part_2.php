@@ -1,6 +1,8 @@
 <?php
 
-$input = file_get_contents(__DIR__ . '/part_1.txt');
+ini_set('memory_limit', '1G');
+
+$input = file_get_contents(__DIR__ . '/part_2.txt');
 $grid = Grid::parse($input);
 
 echo getShortestPath($grid) . PHP_EOL;
@@ -44,7 +46,10 @@ function getShortestPathForPoint(Grid $grid, Point $start) {
 
 function getShortestPathForAllPoints(Grid $grid) {
     $return = [];
-    $return['@'] = getShortestPathForPoint($grid, $grid->start);
+
+    foreach ($grid->starts as $key => $start) {
+        $return[$key] = getShortestPathForPoint($grid, $start);
+    }
 
     foreach ($grid->keys as $location => $key) {
         [$x, $y] = explode(',', $location);
@@ -60,35 +65,41 @@ function getShortestPath(Grid $grid) {
     $seen_signatures = [];
     $num_keys = count($grid->keys);
     $pQueue = new SplPriorityQueue();
-    $pQueue->insert([0, '@', []], PHP_INT_MAX);
+    $pQueue->insert([0, [0, 1, 2, 3], []], PHP_INT_MAX);
 
     while ($pQueue->count()) {
-        [$steps, $key, $keys] = $pQueue->extract();
+        [$steps, $keys, $keysFound] = $pQueue->extract();
         sort($keys);
-        $signature = "$key" . implode('', $keys);
+        sort($keysFound);
+        $signature = implode('', $keys) . '' . implode('', $keysFound);
         if (isset($seen_signatures[$signature])) {
             continue;
         }
         $seen_signatures[$signature] = true;
 
-        if (count($keys) === $num_keys) {
+        if (count($keysFound) === $num_keys) {
             return $steps;
         }
 
-        $paths = $allPaths[$key];
-        foreach ($paths as $destKey => $item) {
-            if (in_array($destKey, $keys)) {
-                continue;
-            }
-
-            foreach ($item[1] as $door) {
-                if (!in_array(strtolower($door), $keys)) {
-                    continue 2;
+        foreach ($keys as $index => $key) {
+            $paths = $allPaths[$key];
+            foreach ($paths as $destKey => $item) {
+                if (in_array($destKey, $keysFound)) {
+                    continue;
                 }
-            }
 
-            $newKeys = array_merge($keys, [$destKey]);
-            $pQueue->insert([$steps + $item[0], $destKey, $newKeys], (PHP_INT_MAX - ($steps + $item[0])) + count($keys));
+                foreach ($item[1] as $door) {
+                    if (!in_array(strtolower($door), $keysFound)) {
+                        continue 2;
+                    }
+                }
+
+                $newKeys = $keys;
+                $newKeys[$index] = $destKey;
+
+                $newKeysFound = array_merge($keysFound, [$destKey]);
+                $pQueue->insert([$steps + $item[0], $newKeys, $newKeysFound], (PHP_INT_MAX - ($steps + $item[0])) + count($keysFound));
+            }
         }
     }
 }
@@ -98,14 +109,15 @@ class Grid
     public array $walls;
     public array $keys;
     public array $doors;
-    public Point $start;
+    /** @var Point[] */
+    public array $starts;
 
-    public function __construct(array $walls, array $keys, array $doors, Point $start)
+    public function __construct(array $walls, array $keys, array $doors, array $starts)
     {
         $this->walls = $walls;
         $this->keys = $keys;
         $this->doors = $doors;
-        $this->start = $start;
+        $this->starts = $starts;
     }
 
     public static function parse(string $input)
@@ -113,7 +125,7 @@ class Grid
         $walls = [];
         $keys = [];
         $doors = [];
-        $start = null;
+        $starts = [];
 
         foreach (explode("\n", $input) as $y => $line) {
             foreach (str_split(trim($line)) as $x => $char) {
@@ -122,7 +134,7 @@ class Grid
                 if ($char === '#') {
                     $walls[(string) $location] = true;
                 } elseif ($char === '@') {
-                    $start = $location;
+                    $starts[] = $location;
                 } elseif (preg_match('/^[a-z]$/', $char)) {
                     $keys[(string) $location] = $char;
                 } elseif (preg_match('/^[A-Z]$/', $char)) {
@@ -131,7 +143,7 @@ class Grid
             }
         }
 
-        return new Grid($walls, $keys, $doors, $start);
+        return new Grid($walls, $keys, $doors, $starts);
     }
 }
 

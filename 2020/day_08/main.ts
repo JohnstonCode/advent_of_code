@@ -29,7 +29,7 @@ function runBootCode(instrutions: string[], infinateReturn = false) {
         acc = eval(`${acc} ${offset}`);
         index += 1;
         break;
-      case "jmp": 
+      case "jmp":
         index = eval(`${index} ${offset}`);
         break;
       case "nop":
@@ -42,14 +42,14 @@ function runBootCode(instrutions: string[], infinateReturn = false) {
 console.log(`Part 1: ${runBootCode(instructions, true)}`);
 
 loop:
-for (const [from, to] of [['nop', 'jump'], ['jmp', 'nop']]) {
+for (const [from, to] of [["nop", "jump"], ["jmp", "nop"]]) {
   for (let i = 0; i < instructions.length; i++) {
     let [opp, offset] = instructions[i].split(" ");
 
     if (opp === from) {
       opp = to;
 
-      instructions[i] = [opp, offset].join(' ');
+      instructions[i] = [opp, offset].join(" ");
 
       const part2 = runBootCode(instructions);
       if (part2) {
@@ -59,7 +59,7 @@ for (const [from, to] of [['nop', 'jump'], ['jmp', 'nop']]) {
       }
 
       opp = from;
-      instructions[i] = [opp, offset].join(' ');
+      instructions[i] = [opp, offset].join(" ");
     }
   }
 }

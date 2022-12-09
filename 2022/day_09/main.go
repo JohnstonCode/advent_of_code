@@ -26,12 +26,12 @@ func main() {
 
 			d := head.Sub(tail)
 			if abs(d.X) > 1 || abs(d.Y) > 1 {
-				tail = tail.Add(image.Point{tailMove(d.X), tailMove(d.Y)})
+				tail = tail.Add(image.Point{moveKnot(d.X), moveKnot(d.Y)})
 			}
 
 			for i := 1; i < len(rope); i++ {
 				if d := rope[i-1].Sub(rope[i]); abs(d.X) > 1 || abs(d.Y) > 1 {
-					rope[i] = rope[i].Add(image.Point{tailMove(d.X), tailMove(d.Y)})
+					rope[i] = rope[i].Add(image.Point{moveKnot(d.X), moveKnot(d.Y)})
 				}
 			}
 
@@ -40,8 +40,8 @@ func main() {
 		}
 	}
 
-	fmt.Println(len(tailVisits))
-	fmt.Println(len(tailVisitsP2))
+	fmt.Printf("Part 1: %v\n", len(tailVisits))
+	fmt.Printf("Part 2: %v\n", len(tailVisitsP2))
 }
 
 func movePoint(point image.Point, dir string) image.Point {
@@ -66,7 +66,7 @@ func abs(x int) int {
 	return x
 }
 
-func tailMove(x int) int {
+func moveKnot(x int) int {
 	if x < 0 {
 		return -1
 	} else if x > 0 {

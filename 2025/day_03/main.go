@@ -1,97 +1,113 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"log"
 	"os"
-	"strconv"
 	"strings"
 )
 
 func main() {
-	input, err := os.ReadFile("input.txt")
+	banks, err := parseInput("input.txt")
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
-	banks := strings.Split(string(input), "\n")
-
-	part1(banks)
-	part2(banks)
+	fmt.Println(part1(banks))
+	fmt.Println(part2(banks))
 }
 
-func part1(banks []string) {
-	part1 := 0
+func parseInput(path string) ([]string, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
 
-	for _, bank := range banks {
-		nums := strings.Split(bank, "")
+	var banks []string
 
-		m := 0
-
-		for i := 0; i < len(nums); i++ {
-			for j := i + 1; j < len(nums); j++ {
-				n, _ := strconv.Atoi(nums[i] + nums[j])
-
-				m = Max(m, n)
-			}
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" {
+			continue
 		}
 
-		part1 += m
+		banks = append(banks, line)
 	}
 
-	fmt.Println(part1)
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return banks, nil
 }
 
-func part2(banks []string) {
+func part1(banks []string) int {
 	total := 0
 
 	for _, bank := range banks {
-		snums := strings.Split(bank, "")
-		nums := make([]int, len(snums))
+		maxPair := 0
 
-		for i, s := range snums {
-			num, _ := strconv.Atoi(s)
-			nums[i] = num
+		for i := 0; i < len(bank); i++ {
+			for j := i + 1; j < len(bank); j++ {
+				d1 := int(bank[i] - '0')
+				d2 := int(bank[j] - '0')
+
+				n := d1*10 + d2
+				if n > maxPair {
+					maxPair = n
+				}
+			}
 		}
 
-		maxNums := make([]int, 0)
-
-		total += findHighestJolt(0, nums, maxNums)
+		total += maxPair
 	}
 
-	fmt.Println(total)
+	return total
 }
 
-func Max(a, b int) int {
-	if a > b {
-		return a
+func part2(banks []string) int {
+	total := 0
+
+	for _, bank := range banks {
+		digits := toDigits(bank)
+		total += highestJoltNumber(digits, 12)
 	}
-	return b
+
+	return total
 }
 
-func findHighestJolt(start int, nums []int, highNums []int) int {
-	m := 0
-	l := len(nums) - ((12 - 1) - len(highNums))
+func toDigits(s string) []int {
+	digits := make([]int, len(s))
+	for i := range s {
+		digits[i] = int(s[i] - '0')
+	}
 
-	for i := start; i < l; i++ {
-		current := nums[i]
-		if current > m {
-			m = current
-			start = i
+	return digits
+}
+
+func highestJoltNumber(nums []int, count int) int {
+	start := 0
+	result := 0
+
+	for picked := 0; picked < count; picked++ {
+		limit := len(nums) - (count - picked) + 1
+
+		maxDigit := -1
+		maxIndex := start
+
+		for i := start; i < limit; i++ {
+			if nums[i] > maxDigit {
+				maxDigit = nums[i]
+				maxIndex = i
+			}
 		}
+
+		result = result*10 + maxDigit
+		start = maxIndex + 1
 	}
 
-	highNums = append(highNums, m)
-	if len(highNums) < 12 {
-		return findHighestJolt(start+1, nums, highNums)
-	}
-
-	strs := make([]string, len(highNums))
-	for i, j := range highNums {
-		strs[i] = strconv.Itoa(j)
-	}
-
-	num := strings.Join(strs, "")
-	res, _ := strconv.Atoi(num)
-
-	return res
+	return result
 }
